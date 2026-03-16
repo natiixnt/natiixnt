@@ -20,6 +20,8 @@ agent → redcon → model
 
 less tokens. less money. same results. 💸
 
+<img src="banner.png" width="100%" />
+
 ---
 
 ### what i do 🧠
