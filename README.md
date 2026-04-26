@@ -5,10 +5,19 @@
 currently building **[redcon](https://github.com/natiixnt/ContextBudget)** - context optimization layer for AI coding agents. massive repo contexts kill your token budget. redcon fixes that. 🔥
 
 ```
-baseline:   12,228 tokens
-cold start:  7,749 tokens  (-37%)
-warm cache:    919 tokens  (-92%)
+file context:
+  baseline:   12,228 tokens
+  cold start:  7,749 tokens  (-37%)
+  warm cache:    919 tokens  (-92%)
+
+command output (git diff, pytest, grep, ls -R...):
+  git diff:   8,078 → 244 tokens  (-97%)
+  pytest:     2,555 → 669 tokens  (-74%)
+  grep:       7,015 → 1,623 tokens (-77%)
+  find:       3,398 → 636 tokens  (-81%)
 ```
+
+11 compressors. sub-1ms parse. zero info loss at compact level (verified by must-preserve regex gates). 🎯
 
 ```
 pip install redcon
