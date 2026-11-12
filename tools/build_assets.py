@@ -1,4 +1,5 @@
-"""Builds the README graphics (assets/*-dark.svg and *-light.svg).
+"""Builds the README graphics: banner, impact strip and project grid, each in dark and light
+and in a desktop (840 px) and a phone (360 px, "-m") layout: assets/<name>[-m]-<theme>.svg.
 
 All text is converted to outlines (glyph paths), because GitHub serves README
 SVGs through <img> with a CSP that blocks web fonts, embedded or not.
@@ -15,7 +16,6 @@ from fontTools.varLib import instancer
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "assets")
 FONT = os.path.join(HERE, "fonts", "geist-latin-wght-normal.woff2")
-W = 600
 
 THEMES = {
     "dark": dict(bg="#0c0c0e", card="#141417", border="#26262b", text="#f2f2f3", muted="#a1a1aa",
@@ -40,8 +40,9 @@ def esc(s):
 
 
 class Canvas:
-    def __init__(self, theme, height, title, desc):
+    def __init__(self, theme, width, height, title, desc):
         self.t = THEMES[theme]
+        self.w = width
         self.h = height
         self.title, self.desc = title, desc
         self.defs = {}
@@ -113,201 +114,141 @@ class Canvas:
         defs = "".join('<path id="%s" d="%s"/>' % (k, v) for k, v in sorted(self.defs.items()))
         return ('<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d" role="img" aria-labelledby="t d">'
                 '<title id="t">%s</title><desc id="d">%s</desc><defs>%s</defs>%s</svg>\n'
-                % (W, self.h, W, self.h, esc(self.title), esc(self.desc), defs, "".join(self.body)))
+                % (self.w, self.h, self.w, self.h, esc(self.title), esc(self.desc), defs, "".join(self.body)))
 
 
-def save(name, theme, svg):
-    path = os.path.join(OUT, "%s-%s.svg" % (name, theme))
+def save(name, theme, svg, phone=False):
+    path = os.path.join(OUT, "%s%s-%s.svg" % (name, "-m" if phone else "", theme))
     with open(path, "w") as fh:
         fh.write(svg)
     print("%-28s %6.1f KB" % (os.path.basename(path), len(svg) / 1024))
 
 
-# ---------------------------------------------------------------- banner
-def banner(theme):
-    c = Canvas(theme, 236, "Natalia Szczepanik, Senior AI Engineer and Forward Deployed Engineer",
-               "LLM agents, RAG, evaluation, production ML. Warsaw, Poland, remote or hybrid.")
-    t = c.t
-    c.rect(0, 0, W, c.h, 16, t["bg"], t["border"])
-    c.text(32, 84, "Natalia Szczepanik", 46, t["text"], 700, -0.045)
-    c.text(32, 122, "Senior AI Engineer | Forward Deployed Engineer", 17, t["accent"], 500)
-    c.text(32, 154, "LLM agents, RAG, evaluation, production ML", 15, t["muted"], 400)
-    c.text(32, 176, "Warsaw, Poland | remote or hybrid", 13.5, t["muted"], 400)
-    c.text(32, 205, "Agent hub: 7 of 38 resolved experiments kept, 31 rolled back", 12, t["muted"], 400)
-    n, gap = 38, 3
-    bw = (W - 64 - gap * (n - 1)) / n
-    for i in range(n):
-        c.rect(32 + i * (bw + gap), 212, bw, 12, 2, t["green"] if i < 7 else t["off"])
-    save("banner", theme, c.render())
-
-
-# ---------------------------------------------------------------- impact
+# Every number and title below comes from the CV (Senior AI Engineer | FDE, EN).
 IMPACT = [
-    ("40+", "AI and automation deployments at companies of 20 to 200 people"),
-    ("2,770 h", "saved per month in total, as reported in post-deployment case studies"),
-    ("-43%", "cost per task on my agent orchestration platform within two weeks, first-pass rate held at 71 to 78%"),
-    ("0.86", "clause@1 of the legal RAG on a 234-question golden dataset, MRR 0.975"),
+    ("40+", "deployments at companies of 20 to 200 people"),
+    ("2,770 h", "saved per month in total"),
+    ("-43%", "cost per task on the agent platform"),
+    ("0.86", "clause@1 of the legal RAG, MRR 0.975"),
+]
+
+PROJECTS = [
+    dict(tag="In production", title="Agent hub: multi-agent orchestration",
+         text="Manager agent, project supervisors and workers in isolated git worktrees. Test gates, cross-model review, human approval for irreversible actions.",
+         foot="-43% cost per task | -55% median time | 7 of 38 experiments kept", foot_color="green"),
+    dict(tag="Client delivery | core licensed for reuse", title="Legal RAG over 21 Polish statutes",
+         text="Every answer cites the provision and the legal-state date, or abstains. Hybrid retrieval, RRF and LLM reranking.",
+         foot="clause@1 0.86 | MRR 0.975 | 30/30 refusals", foot_color="green"),
+    dict(tag="Paper in preparation | code private", title="AAE: self-improving decision system",
+         text="Hundreds of strategy variants; one is promoted only after sequential tests and online FDR control. The isolated executor is fail-closed.",
+         foot="First domain: on-chain markets, paper trading", foot_color="accent"),
+    dict(tag="MTEB-PL | in progress", title="Polish embedding model fine-tune",
+         text="multilingual-e5-large-instruct on 7 Polish datasets: hard negatives from BM25 plus a cross-encoder, MNRL + Matryoshka loss.",
+         foot="Single RTX 5080", foot_color="accent"),
 ]
 
 
-def impact(theme):
-    tw, th, gap = (W - 12) / 2, 128, 12
-    c = Canvas(theme, 2 * th + gap, "Selected impact",
-               "; ".join("%s: %s" % x for x in IMPACT))
-    t = c.t
-    for i, (big, txt) in enumerate(IMPACT):
-        x, y = (i % 2) * (tw + gap), (i // 2) * (th + gap)
-        c.rect(x, y, tw, th, 14, t["card"], t["border"])
-        c.text(x + 22, y + 52, big, 36, t["text"], 700, -0.03)
-        c.para(x + 22, y + 78, txt, 13.5, t["muted"], tw - 44, 19)
-    save("impact", theme, c.render())
+def banner(theme, phone):
+    t = THEMES[theme]
+    if not phone:
+        c = Canvas(theme, 840, 156, "Natalia Szczepanik, Senior AI Engineer and Forward Deployed Engineer",
+                   "LLM agents, RAG, evals, production deployments. Warsaw, Poland, remote or hybrid.")
+        c.rect(0, 0, c.w, c.h, 16, t["bg"], t["border"])
+        c.text(32, 72, "Natalia Szczepanik", 46, t["text"], 700, -0.045)
+        c.text(32, 102, "Senior AI Engineer | Forward Deployed Engineer", 17, t["accent"], 500)
+        c.text(32, 130, "LLM agents, RAG, evals, production deployments | Warsaw, Poland | remote or hybrid", 13.5, t["muted"], 400)
+        n, gap, bw0 = 38, 3, 300
+        bw = (bw0 - gap * (n - 1)) / n
+        x0 = c.w - 32 - bw0
+        c.text(c.w - 32, 52, "Agent hub: 7 of 38 resolved experiments kept", 12, t["muted"], 400, anchor="end")
+        for i in range(n):
+            c.rect(x0 + i * (bw + gap), 64, bw, 12, 2, t["green"] if i < 7 else t["off"])
+    else:
+        c = Canvas(theme, 360, 168, "Natalia Szczepanik, Senior AI Engineer and Forward Deployed Engineer",
+                   "LLM agents, RAG, evals, production deployments. Warsaw, Poland, remote or hybrid.")
+        c.rect(0, 0, c.w, c.h, 14, t["bg"], t["border"])
+        c.text(20, 54, "Natalia Szczepanik", 32, t["text"], 700, -0.04)
+        c.text(20, 82, "Senior AI Engineer | Forward Deployed Engineer", 13.5, t["accent"], 500)
+        c.text(20, 106, "LLM agents, RAG, evals, production deployments", 12.5, t["muted"], 400)
+        c.text(20, 124, "Warsaw, Poland | remote or hybrid", 12.5, t["muted"], 400)
+        n, gap = 38, 2
+        bw = (c.w - 40 - gap * (n - 1)) / n
+        for i in range(n):
+            c.rect(20 + i * (bw + gap), 142, bw, 8, 2, t["green"] if i < 7 else t["off"])
+    save("banner", theme, c.render(), phone)
 
 
-# ---------------------------------------------------------------- scope
-SCOPE = [
-    ("Backend and APIs", "Python since 2016, FastAPI, Celery, PostgreSQL, Redis. REST APIs, webhooks, OAuth2, KSeF."),
-    ("Custom systems and apps", "Built to order: purchasing decision platform, Budibase apps, CRM and invoice workflow."),
-    ("AI agents and orchestration", "Multi-agent systems on Claude, OpenAI and Gemini. Test gates, cross-model review, human approval."),
-    ("RAG", "Structure-aware chunking, hybrid retrieval, reranking. Every answer cites its source or abstains."),
-    ("Fine-tuning and evaluation", "Polish embedding fine-tune, LoRA, golden datasets, A/B tests, drift detection."),
-    ("Research and open source", "Redcon, a benchmark on the fly visual system, papers in preparation."),
-    ("Integrations and automation", "n8n, ERP and CRM, monday.com, KSeF. 40+ deployments at companies of 20 to 200 people."),
-    ("Infrastructure and deployment", "Docker and Kubernetes on client servers or in their AWS accounts. CI/CD, backups, tracing."),
-    ("Security by design", "Non-root containers, least privilege, secrets management, prompt-injection defence, audit logs."),
-]
+def impact(theme, phone):
+    t = THEMES[theme]
+    desc = "; ".join("%s: %s" % x for x in IMPACT)
+    if not phone:
+        c = Canvas(theme, 840, 104, "Selected impact", desc)
+        c.rect(0, 0, c.w, c.h, 14, t["card"], t["border"])
+        cw = c.w / 4
+        for i, (big, txt) in enumerate(IMPACT):
+            x = i * cw
+            if i:
+                c.rect(x, 18, 1, c.h - 36, 0, t["border"])
+            c.text(x + 24, 48, big, 34, t["text"], 700, -0.03)
+            c.para(x + 24, 71, txt, 12.5, t["muted"], cw - 40, 16)
+    else:
+        cw, ch = 180, 84
+        c = Canvas(theme, 360, 2 * ch, "Selected impact", desc)
+        c.rect(0, 0, c.w, c.h, 14, t["card"], t["border"])
+        c.rect(c.w / 2, 14, 1, c.h - 28, 0, t["border"])
+        c.rect(14, ch, c.w - 28, 1, 0, t["border"])
+        for i, (big, txt) in enumerate(IMPACT):
+            x, y = (i % 2) * cw, (i // 2) * ch
+            c.text(x + 18, y + 36, big, 26, t["text"], 700, -0.03)
+            c.para(x + 18, y + 55, txt, 11.5, t["muted"], cw - 30, 14)
+    save("impact", theme, c.render(), phone)
 
 
-def scope(theme):
-    cw, ch, gap, pad = (W - 12) / 2, 112, 12, 20
-    rows = (len(SCOPE) + 1) // 2
-    c = Canvas(theme, rows * ch + (rows - 1) * gap, "What I do",
-               "; ".join("%s: %s" % x for x in SCOPE))
-    t = c.t
-    for i, (title, txt) in enumerate(SCOPE):
-        last = i == len(SCOPE) - 1 and len(SCOPE) % 2 == 1
-        x, y = (0 if last else (i % 2) * (cw + gap)), (i // 2) * (ch + gap)
-        w = W if last else cw
-        c.rect(x, y, w, ch, 14, t["card"], t["border"])
-        c.text(x + pad, y + 34, title, 16.5, t["text"], 600, -0.01)
-        c.para(x + pad, y + 58, txt, 13.5, t["muted"], w - 2 * pad, 19)
-    save("scope", theme, c.render())
+def projects(theme, phone):
+    t = THEMES[theme]
+    desc = "; ".join("%s: %s" % (p["title"], p["text"]) for p in PROJECTS)
+    cols = 1 if phone else 2
+    gap, cw = (10, 360) if phone else (12, 414)
+    pad = 18
+    tsz, bsz, fsz = (15.5, 12.5, 11.5) if phone else (17, 13, 11.5)
+    probe = Canvas(theme, 10, 10, "", "")
 
+    def parts(p):
+        tl = probe.wrap(p["title"], tsz, cw - 2 * pad, 600, -0.02)
+        bl = probe.wrap(p["text"], bsz, cw - 2 * pad, 400)
+        fl = probe.wrap(p["foot"], fsz, cw - 2 * pad, 600 if p["foot_color"] == "green" else 500)
+        return tl, bl, fl
 
-# ---------------------------------------------------------------- cards
-CARDS = [
-    dict(name="card-agent-hub", tags=["in production", "runs client deployments"],
-         title="Agent hub: multi-agent orchestration with safe self-improvement",
-         text="A manager agent, project supervisors and workers in isolated git worktrees run several projects in parallel. Test gates before every merge, code review by a model from a different family, human approval only for irreversible actions. The platform changes its own process through experiments with automatic rollback.",
-         metrics=[("-43%", "cost per task"), ("-55%", "median time per task"), ("7 of 38", "experiments kept")]),
-    dict(name="card-legal-rag", tags=["client delivery", "core licensed for reuse"],
-         title="Legal RAG over 21 Polish statutes",
-         text="Every answer cites the provision and the legal-state date; no reliable source means abstention. Hybrid retrieval, RRF and LLM reranking. HyDE, query rewriting and Cohere Rerank were tested and rejected: no gain on this data. Metrics on the 234-question golden dataset.",
-         metrics=[("0.86", "clause@1"), ("0.975", "MRR"), ("30/30", "out-of-scope refusals")]),
-    dict(name="card-redcon", tags=["open source", "MCP"],
-         title="Redcon (ContextBudget)",
-         text="Context budgeting layer for coding agents with a public benchmark, context-eval. A/B tests on real agent sessions overturned the original assumption: the main token cost is replayed conversation history, not file selection. I re-planned the roadmap around that finding.",
-         ),
-    dict(name="card-flyvis", tags=["open source", "paper in preparation"],
-         title="flyvis-circuit-bench",
-         text="Do circuit-discovery methods recover mechanism or only the connectivity mask? A benchmark against exhaustive ablation on a Drosophila visual-system model (FlyWire, flyvis), preregistered with null models.",
-         ),
-    dict(name="card-aae", tags=["paper in preparation", "code private"],
-         title="AAE: self-improving decision system",
-         text="Hundreds of competing strategy variants; one is promoted only after empirical-Bayes shrinkage, anytime-valid sequential tests and online FDR control (e-LOND) under dependent signals. The local LLM has no path to execution; the isolated executor is fail-closed. First domain: on-chain markets, paper trading."),
-    dict(name="card-embedding", tags=["MTEB-PL", "in progress"],
-         title="Polish embedding model fine-tune",
-         text="multilingual-e5-large-instruct on 7 Polish datasets: hard negatives from BM25 plus a cross-encoder, MNRL + Matryoshka loss, MoCo-style memory bank on a single RTX 5080."),
-]
-
-
-def card(theme, d):
-    pad = 22
-    probe = Canvas(theme, 10, "", "")
-    nt = len(probe.wrap(d["title"], 20, W - 2 * pad, 600, -0.02))
-    nd = len(probe.wrap(d["text"], 14.5, W - 2 * pad, 400))
-    y_title = pad + 26 + 30
-    y_text = y_title + (nt - 1) * 26 + 28
-    y_end = y_text + (nd - 1) * 22
-    extra = 0
-    if d.get("metrics"):
-        extra = 16 + 56
-    elif d.get("foot"):
-        extra = 14 + 18
-    h = int(y_end + extra + pad + 6)
-    c = Canvas(theme, h, d["title"], d["text"])
-    t = c.t
-    c.rect(0, 0, W, h, 14, t["card"], t["border"])
-    x = pad
-    for i, tag in enumerate(d["tags"]):
-        x += c.pill(x, pad, tag, t["text"] if i == 0 else t["muted"]) + 8
-    for i, line in enumerate(c.wrap(d["title"], 20, W - 2 * pad, 600, -0.02)):
-        c.text(pad, y_title + i * 26, line, 20, t["text"], 600, -0.02)
-    c.para(pad, y_text, d["text"], 14.5, t["muted"], W - 2 * pad, 22)
-    if d.get("metrics"):
-        gap = 10
-        mw = (W - 2 * pad - 2 * gap) / 3
-        my = y_end + 22
-        for i, (val, lab) in enumerate(d["metrics"]):
-            mx = pad + i * (mw + gap)
-            c.rect(mx, my, mw, 52, 10, t["bg"], t["border"])
-            c.text(mx + 12, my + 24, val, 18, t["green"], 700, -0.02)
-            c.text(mx + 12, my + 42, lab, 11.5, t["muted"], 400)
-    elif d.get("foot"):
-        c.text(pad, y_end + 34, d["foot"], 13.5, t["accent"], 500)
-    save(d["name"], theme, c.render())
-
-
-# ---------------------------------------------------------------- stack
-STACK = [
-    ("Agents", ["LangGraph", "LangChain", "MCP", "Claude Code", "Temporal", "Prefect", "Pydantic", "tool use"]),
-    ("Models", ["Claude", "OpenAI", "Gemini", "AWS Bedrock", "Qwen3", "vLLM", "OpenRouter"]),
-    ("RAG", ["pgvector", "Qdrant", "Pinecone", "ChromaDB", "BM25", "RRF", "rerankers"]),
-    ("Evals", ["golden datasets", "regression suites", "Langfuse", "LangSmith", "OpenTelemetry", "Prometheus"]),
-    ("ML", ["PyTorch", "Hugging Face", "LoRA", "LightGBM", "Optuna"]),
-    ("Backend", ["Python", "FastAPI", "Celery", "PostgreSQL", "Redis", "TypeScript", "Node.js", "Next.js"]),
-    ("Cloud", ["AWS", "Azure", "Docker", "Kubernetes", "GitHub Actions", "Terraform (basic)"]),
-    ("Integrations", ["REST", "webhooks", "OAuth2", "n8n", "monday.com", "KSeF", "Budibase"]),
-]
-
-
-def stack(theme):
-    lw, ph, gx, gy = 96, 28, 7, 8
-    probe = Canvas(theme, 10, "", "")
-    layouts, total = [], 0
-    for label, items in STACK:
-        rows, x, row = [[]], 0, 0
-        for it in items:
-            w = probe.width(it, 13, 500) + 22
-            if x + w > W - lw - 24 and rows[-1]:
-                rows.append([])
-                x = 0
-            rows[-1].append((it, x, w))
-            x += w + gx
-        layouts.append(rows)
-        total += len(rows) * (ph + gy) + 14
-    h = total + 24
-    c = Canvas(theme, h, "Stack",
-               "; ".join("%s: %s" % (l, ", ".join(i)) for l, i in STACK))
-    t = c.t
-    c.rect(0, 0, W, h, 14, t["card"], t["border"])
-    y = 16
-    for (label, _), rows in zip(STACK, layouts):
-        c.text(22, y + 19, label, 13.5, t["text"], 600)
-        for ri, row in enumerate(rows):
-            for it, x, w in row:
-                yy = y + ri * (ph + gy)
-                c.rect(lw + 22 + x, yy, w, ph, 8, t["chip"], t["chip_border"])
-                c.text(lw + 22 + x + 11, yy + 18.5, it, 13, t["text"], 500)
-        y += len(rows) * (ph + gy) + 14
-    save("stack", theme, c.render())
+    def need(p):
+        tl, bl, fl = parts(p)
+        return 54 + (len(tl) - 1) * 22 + 24 + (len(bl) - 1) * 18.5 + 10 + 16 + (len(fl) - 1) * 16 + pad + 4
+    rows = [PROJECTS[i:i + cols] for i in range(0, len(PROJECTS), cols)]
+    heights = [int(max(need(p) for p in r)) for r in rows]
+    total = sum(heights) + gap * (len(rows) - 1)
+    c = Canvas(theme, cw * cols + gap * (cols - 1), total, "Projects and research", desc)
+    y = 0
+    for r, h in zip(rows, heights):
+        for k, p in enumerate(r):
+            x = k * (cw + gap)
+            c.rect(x, y, cw, h, 14, t["card"], t["border"])
+            c.text(x + pad, y + 28, p["tag"], 11.5, t["accent"], 500)
+            tl, bl, fl = parts(p)
+            for n, line in enumerate(tl):
+                c.text(x + pad, y + 54 + n * 22, line, tsz, t["text"], 600, -0.02)
+            by = y + 54 + (len(tl) - 1) * 22 + 24
+            for n, line in enumerate(bl):
+                c.text(x + pad, by + n * 18.5, line, bsz, t["muted"], 400)
+            fy = y + h - pad - 4 - (len(fl) - 1) * 16
+            for n, line in enumerate(fl):
+                c.text(x + pad, fy + n * 16, line, fsz, t[p["foot_color"]], 600 if p["foot_color"] == "green" else 500)
+        y += h + gap
+    save("projects", theme, c.render(), phone)
 
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     for th in THEMES:
-        banner(th)
-        impact(th)
-        scope(th)
-        for d in CARDS:
-            card(th, d)
-        stack(th)
+        for phone in (False, True):
+            banner(th, phone)
+            impact(th, phone)
+            projects(th, phone)
