@@ -157,24 +157,14 @@ def banner(theme, phone):
         c.text(32, 72, "Natalia Szczepanik", 46, t["text"], 700, -0.045)
         c.text(32, 102, "Senior AI Engineer | Forward Deployed Engineer", 17, t["accent"], 500)
         c.text(32, 130, "LLM agents, RAG, evals, production deployments | Warsaw, Poland | remote or hybrid", 13.5, t["muted"], 400)
-        n, gap, bw0 = 38, 3, 300
-        bw = (bw0 - gap * (n - 1)) / n
-        x0 = c.w - 32 - bw0
-        c.text(c.w - 32, 52, "Agent hub: 7 of 38 resolved experiments kept", 12, t["muted"], 400, anchor="end")
-        for i in range(n):
-            c.rect(x0 + i * (bw + gap), 64, bw, 12, 2, t["green"] if i < 7 else t["off"])
     else:
-        c = Canvas(theme, 360, 168, "Natalia Szczepanik, Senior AI Engineer and Forward Deployed Engineer",
+        c = Canvas(theme, 360, 144, "Natalia Szczepanik, Senior AI Engineer and Forward Deployed Engineer",
                    "LLM agents, RAG, evals, production deployments. Warsaw, Poland, remote or hybrid.")
         c.rect(0, 0, c.w, c.h, 14, t["bg"], t["border"])
         c.text(20, 54, "Natalia Szczepanik", 32, t["text"], 700, -0.04)
         c.text(20, 82, "Senior AI Engineer | Forward Deployed Engineer", 13.5, t["accent"], 500)
         c.text(20, 106, "LLM agents, RAG, evals, production deployments", 12.5, t["muted"], 400)
         c.text(20, 124, "Warsaw, Poland | remote or hybrid", 12.5, t["muted"], 400)
-        n, gap = 38, 2
-        bw = (c.w - 40 - gap * (n - 1)) / n
-        for i in range(n):
-            c.rect(20 + i * (bw + gap), 142, bw, 8, 2, t["green"] if i < 7 else t["off"])
     save("banner", theme, c.render(), phone)
 
 
