@@ -124,21 +124,21 @@ def save(name, theme, svg, phone=False):
     print("%-28s %6.1f KB" % (os.path.basename(path), len(svg) / 1024))
 
 
-# Every number and title below comes from the CV (Senior AI Engineer | FDE, EN).
+# Every number and title below comes from the CV or from a public repository benchmark.
 IMPACT = [
     ("40+", "deployments at companies of 20 to 200 people"),
     ("2,770 h", "saved per month in total"),
     ("-43%", "cost per task on the agent platform"),
-    ("0.86", "clause@1 of the legal RAG, MRR 0.975"),
+    ("-55%", "median task time on the agent platform"),
 ]
 
 PROJECTS = [
     dict(tag="In production", title="Agent hub: multi-agent orchestration",
          text="Manager agent, project supervisors and workers in isolated git worktrees. Test gates, cross-model review, human approval for irreversible actions.",
          foot="-43% cost per task | -55% median time | 7 of 38 experiments kept", foot_color="green"),
-    dict(tag="Client delivery | core licensed for reuse", title="Legal RAG over 21 Polish statutes",
-         text="Every answer cites the provision and the legal-state date, or abstains. Hybrid retrieval, RRF and LLM reranking.",
-         foot="clause@1 0.86 | MRR 0.975 | 30/30 refusals", foot_color="green"),
+    dict(tag="Open source", title="redcon: context budgeting for coding agents",
+         text="Selects, compresses, caches and budgets repository context for coding agents. Works as an MCP server.",
+         foot="-69% context tokens on average | public benchmark, 4 tasks", foot_color="green"),
     dict(tag="Paper in preparation | code private", title="AAE: self-improving decision system",
          text="Hundreds of strategy variants; one is promoted only after sequential tests and online FDR control. The isolated executor is fail-closed.",
          foot="First domain: on-chain markets, paper trading", foot_color="accent"),
@@ -151,20 +151,20 @@ PROJECTS = [
 def banner(theme, phone):
     t = THEMES[theme]
     if not phone:
-        c = Canvas(theme, 840, 156, "Natalia Szczepanik, Senior AI Engineer and Forward Deployed Engineer",
-                   "LLM agents, RAG, evals, production deployments. Warsaw, Poland, remote or hybrid.")
+        c = Canvas(theme, 840, 156, "Natalia Szczepanik, Freelance AI Engineer and Forward Deployed Engineer",
+                   "LLM agents, RAG, evals, production deployments. Warsaw, Poland, remote only.")
         c.rect(0, 0, c.w, c.h, 16, t["bg"], t["border"])
         c.text(32, 72, "Natalia Szczepanik", 46, t["text"], 700, -0.045)
-        c.text(32, 102, "Senior AI Engineer | Forward Deployed Engineer", 17, t["accent"], 500)
-        c.text(32, 130, "LLM agents, RAG, evals, production deployments | Warsaw, Poland | remote or hybrid", 13.5, t["muted"], 400)
+        c.text(32, 102, "Freelance AI Engineer | Forward Deployed Engineer", 17, t["accent"], 500)
+        c.text(32, 130, "LLM agents, RAG, evals, production deployments | Warsaw, Poland | remote only", 13.5, t["muted"], 400)
     else:
-        c = Canvas(theme, 360, 144, "Natalia Szczepanik, Senior AI Engineer and Forward Deployed Engineer",
-                   "LLM agents, RAG, evals, production deployments. Warsaw, Poland, remote or hybrid.")
+        c = Canvas(theme, 360, 144, "Natalia Szczepanik, Freelance AI Engineer and Forward Deployed Engineer",
+                   "LLM agents, RAG, evals, production deployments. Warsaw, Poland, remote only.")
         c.rect(0, 0, c.w, c.h, 14, t["bg"], t["border"])
         c.text(20, 54, "Natalia Szczepanik", 32, t["text"], 700, -0.04)
-        c.text(20, 82, "Senior AI Engineer | Forward Deployed Engineer", 13.5, t["accent"], 500)
+        c.text(20, 82, "Freelance AI Engineer | Forward Deployed Engineer", 13.5, t["accent"], 500)
         c.text(20, 106, "LLM agents, RAG, evals, production deployments", 12.5, t["muted"], 400)
-        c.text(20, 124, "Warsaw, Poland | remote or hybrid", 12.5, t["muted"], 400)
+        c.text(20, 124, "Warsaw, Poland | remote only", 12.5, t["muted"], 400)
     save("banner", theme, c.render(), phone)
 
 
